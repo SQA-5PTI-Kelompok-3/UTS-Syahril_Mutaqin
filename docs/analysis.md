@@ -1,34 +1,26 @@
-# Analisis White-Box
+# Analisis White-Box `Owner.getPet(String, boolean)`
 
-## Baseline yang diverifikasi
+## Source dan ref yang diverifikasi
 
-Repository kosong pada awal pengerjaan, sehingga source tidak diasumsikan
-tersedia di `HEAD`. Source diambil dengan clone shallow:
-
-```text
-https://github.com/spring-projects/spring-petclinic.git
-ref: main (checkout shallow pada 2026-09-29)
-```
-
-Versi build pada source yang diverifikasi adalah Spring Boot `4.1.0` dan Java
-`17` dari `pom.xml`. Repository `spring-petclinic-rest` juga memiliki model
-`Owner`, tetapi method dan struktur yang menjadi target tugas tidak boleh
-dianggap sama tanpa verifikasi. Target yang dipakai di laporan ini adalah
-`spring-petclinic` MVC karena `Owner.getPet(Integer)` benar-benar ditemukan
-pada file:
+Target tugas diverifikasi dari repository `spring-petclinic/spring-petclinic-rest`:
 
 ```text
-src/main/java/org/springframework/samples/petclinic/owner/Owner.java
+URL: https://github.com/spring-petclinic/spring-petclinic-rest.git
+ref: master
+commit: 4cd8e1b0cd42578e882247d8801f6be5d402f118
+file: src/main/java/org/springframework/samples/petclinic/model/Owner.java
 ```
 
-## Unit yang dianalisis
+Method yang benar-benar tersedia pada ref tersebut adalah:
 
 ```java
-public Pet getPet(Integer id) {
-    for (Pet pet : getPets()) {
-        if (!pet.isNew()) {
-            Integer compId = pet.getId();
-            if (Objects.equals(compId, id)) {
+public Pet getPet(String name, boolean ignoreNew) {
+    name = name.toLowerCase();
+    for (Pet pet : getPetsInternal()) {
+        if (!ignoreNew || !pet.isNew()) {
+            String compName = pet.getName();
+            compName = compName.toLowerCase();
+            if (compName.equals(name)) {
                 return pet;
             }
         }
@@ -37,33 +29,35 @@ public Pet getPet(Integer id) {
 }
 ```
 
-Method melakukan pencarian linear. Pet baru sengaja dilewati, kemudian ID
-dibandingkan dengan `Objects.equals`, sehingga perbandingan aman ketika salah
-satu nilai `null`. Method berhenti lebih awal saat menemukan kecocokan dan
-mengembalikan `null` setelah seluruh koleksi diperiksa.
+POM pada ref yang sama menyatakan artifact `spring-petclinic-rest`, versi
+`4.0.2`, dengan parent Spring Boot `4.1.1`.
+
+## Perilaku aktual
+
+1. `name` langsung dinormalisasi dengan `toLowerCase()`, jadi pencarian
+   case-insensitive menurut default locale JVM.
+2. Bila `ignoreNew == false`, semua pet dipertimbangkan.
+3. Bila `ignoreNew == true`, pet baru dilewati; pet lama saja yang diperiksa.
+4. Nama pet juga di-lowercase sebelum dibandingkan.
+5. Method mengembalikan pet pertama yang cocok, atau `null` setelah iterasi
+   selesai.
+6. Tidak ada guard eksplisit untuk `name == null` atau `pet.getName() == null`;
+   keduanya dapat menyebabkan `NullPointerException`. Kondisi ini dicatat
+   sebagai perilaku source, bukan dihilangkan dari analisis.
 
 ## Kompleksitas siklomatik
 
-Dengan CFG berbasis short-circuit dan loop:
+Dengan keputusan loop, keputusan filter `!ignoreNew || !pet.isNew()`, dan
+keputusan `compName.equals(name)`, terdapat tiga predicate:
 
-- keputusan loop `for`: 1
-- keputusan `!pet.isNew()`: 1
-- keputusan `Objects.equals(compId, id)`: 1
-- sehingga `V(G) = 1 + 3 = 4`
+`V(G) = predicate + 1 = 3 + 1 = 4`
 
-Empat independent path diperlukan untuk basis path coverage. Kompleksitas ini
-berlaku pada method aktual, bukan pada CFG generik yang mengasumsikan validasi
-atau cabang lain yang tidak ada di source.
+Short-circuit `||` menambah dua kondisi operasional (`ignoreNew` dan
+`!pet.isNew()`), tetapi tidak menambah predicate utama pada CFG statement-level.
+Test case karena itu harus tetap menguji kombinasi `ignoreNew` dan status pet.
 
-## Temuan implementasi
+## Cakupan
 
-1. `null` pada parameter `id` tidak otomatis menghasilkan exception; pet dengan
-   ID `null` tetap dapat cocok jika pet tersebut bukan pet baru.
-2. Pet baru selalu dilewati, walaupun ID-nya kebetulan sama dengan parameter.
-3. Hasil pertama yang cocok dikembalikan; duplikasi ID pada koleksi tidak
-   diekspos oleh method.
-4. Koleksi kosong dan tidak adanya kecocokan memiliki output yang sama, yaitu
-   `null`.
-
-Rincian node CFG dan test case ada di [`cfg.md`](cfg.md) dan
-[`test-cases.md`](test-cases.md).
+Basis path dan test case eksplisit tersedia pada [`test-cases.md`](test-cases.md),
+sedangkan node/edge CFG tersedia pada [`cfg.md`](cfg.md). Diagram sumbernya
+adalah [`../diagrams/owner-get-pet-flow.mmd`](../diagrams/owner-get-pet-flow.mmd).
