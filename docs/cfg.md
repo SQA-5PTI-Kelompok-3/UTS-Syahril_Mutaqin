@@ -23,6 +23,20 @@ Dari N6, match menuju N7 (exit), sedangkan tidak match kembali ke N3.
 Ada tiga predicate utama: loop, filter, dan equality. Karena itu
 `V(G)=3+1=4`.
 
+```mermaid
+flowchart TD
+    N1(["Entry"]) --> N2["name = name.toLowerCase()"]
+    N2 --> N3{"Masih ada pet?"}
+    N3 -- "tidak" --> N8["loop selesai"]
+    N8 --> N9(["return null"])
+    N3 -- "ya" --> N4{"!ignoreNew OR !pet.isNew()?"}
+    N4 -- "tidak" --> N3
+    N4 -- "ya" --> N5["compName = pet.name.toLowerCase()"]
+    N5 --> N6{"compName.equals(name)?"}
+    N6 -- "tidak" --> N3
+    N6 -- "ya" --> N7(["return pet"])
+```
+
 ## Basis path
 
 - **P1**: koleksi kosong → normalisasi nama → loop habis → `null`.
