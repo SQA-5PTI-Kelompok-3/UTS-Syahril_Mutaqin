@@ -45,7 +45,7 @@ POM pada ref yang sama menyatakan artifact `spring-petclinic-rest`, versi
    keduanya dapat menyebabkan `NullPointerException`. Kondisi ini dicatat
    sebagai perilaku source, bukan dihilangkan dari analisis.
 
-## Kompleksitas siklomatik
+## Kompleksitas siklomatik dan coverage
 
 Dengan keputusan loop, keputusan filter `!ignoreNew || !pet.isNew()`, dan
 keputusan `compName.equals(name)`, terdapat tiga predicate:
@@ -55,9 +55,17 @@ keputusan `compName.equals(name)`, terdapat tiga predicate:
 Short-circuit `||` menambah dua kondisi operasional (`ignoreNew` dan
 `!pet.isNew()`), tetapi tidak menambah predicate utama pada CFG statement-level.
 Test case karena itu harus tetap menguji kombinasi `ignoreNew` dan status pet.
+Dengan suite TC-01 sampai TC-11, branch level-predicate adalah `6/6 = 100%`,
+outcome operand short-circuit adalah `4/4 = 100%`, statement/control node
+adalah `8/8 = 100%`, dan kategori loop (0, 1, >1 iterasi) adalah `3/3 = 100%`.
+Perhitungan, numerator/denominator, dan pemetaan test-case tersedia di
+[`test-cases.md`](test-cases.md); angka tersebut adalah analisis berbasis
+desain test case, bukan hasil instrumentasi JaCoCo.
 
 ## Cakupan
 
-Basis path dan test case eksplisit tersedia pada [`test-cases.md`](test-cases.md),
-sedangkan node/edge CFG tersedia pada [`cfg.md`](cfg.md). Diagram sumbernya
-adalah [`../diagrams/owner-get-pet-flow.mmd`](../diagrams/owner-get-pet-flow.mmd).
+Basis path, path testing, dan test case eksplisit tersedia pada
+[`test-cases.md`](test-cases.md), sedangkan node/edge CFG dan pembedaan
+predicate-level versus short-circuit tersedia pada [`cfg.md`](cfg.md).
+Diagram sumbernya adalah
+[`../diagrams/owner-get-pet-flow.mmd`](../diagrams/owner-get-pet-flow.mmd).

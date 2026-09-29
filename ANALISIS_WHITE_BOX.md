@@ -28,8 +28,13 @@ public Pet getPet(String name, boolean ignoreNew) {
 
 Kompleksitas siklomatik statement-level adalah `V(G)=4`: loop, filter
 `!ignoreNew || !pet.isNew()`, dan equality `compName.equals(name)`, ditambah
-satu. Basis path P1-P4, test case TC-01 sampai TC-09, serta perilaku null yang
+satu. Basis path P1-P4, test case TC-01 sampai TC-11, serta perilaku null yang
 memang dapat melempar `NullPointerException` didokumentasikan di `docs/`.
+
+Berdasarkan definisi CFG yang dicantumkan, suite tersebut mencapai branch
+predicate `6/6`, outcome short-circuit `4/4`, statement/control node `8/8`,
+dan loop `3/3` (semuanya 100%). Ini adalah coverage analitis dari pemetaan
+test case, bukan klaim hasil instrumentasi seluruh repository.
 
 Lihat:
 
